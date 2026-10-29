@@ -1,0 +1,463 @@
+/* ============================================================================
+ * UIdesign-v0.1 · 组件原语样式（第三层 Token 的落地）
+ * ----------------------------------------------------------------------------
+ * 演示规则：
+ *   · tokens.md            组件层只消费 --color-* / --space-* / --r-* / --sh-*
+ *   · components-states.md 六态齐全（default/hover/focus/active/disabled/loading）
+ *                          变体用「变量覆写」实现，不写重复样式
+ *                          按下态不改变布局边界（防抖动）
+ *   · typography-color.md  数字等宽；状态色必须配图标或形状（色盲安全）
+ *   · motion.md            150ms 状态变化；150ms 组件转场；出场快于入场
+ *   · anti-ai/D3           圆角 ≤3 档、阴影 ≤3 档，不滥用
+ * ==========================================================================*/
+
+/* ============================== Button ================================== */
+/* 变体通过覆写 --btn-* 局部变量实现 —— 正交组合，新增变体不改主样式 */
+.btn {
+  --btn-bg: var(--color-primary);
+  --btn-fg: var(--color-primary-fg);
+  --btn-bg-hover: var(--color-primary-hover);
+  --btn-border: transparent;
+
+  display: inline-flex;
+  align-items: center;      /* 图标与文字垂直居中 */
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--control-h);
+  padding: 0 var(--btn-px, var(--space-gap));
+  border: 1px solid var(--btn-border);
+  border-radius: var(--btn-radius);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font: inherit;
+  font-size: var(--fs-4);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-normal) var(--ease-move),
+              border-color var(--dur-normal) var(--ease-move),
+              color var(--dur-normal) var(--ease-move);
+}
+
+.btn:hover:not(:disabled) { background: var(--btn-bg-hover); }
+
+/* 按下态：只变色，不位移 —— 避免布局边界抖动 */
+.btn:active:not(:disabled) { filter: brightness(0.94); }
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 加载态：宽度不变（防抖动），标签保留以便读屏 */
+.btn[aria-busy="true"] { cursor: progress; }
+.btn[aria-busy="true"] > .btn__label { visibility: hidden; }
+
+.btn__spinner {
+  position: absolute;
+  width: 1em; height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--r-pill);
+  animation: ui-spin 640ms linear infinite;
+}
+.btn[aria-busy="true"] { position: relative; }
+
+/* 变体 */
+.btn--secondary {
+  --btn-bg: var(--color-surface);
+  --btn-fg: var(--color-text-1);
+  --btn-bg-hover: var(--color-surface-layout);
+  --btn-border: var(--color-border-strong);
+}
+.btn--danger {
+  --btn-bg: var(--color-err);
+  --btn-fg: #FFFFFF;
+  --btn-bg-hover: #991B1B;
+}
+.btn--ghost {
+  --btn-bg: transparent;
+  --btn-fg: var(--color-text-2);
+  --btn-bg-hover: var(--color-surface-layout);
+}
+/* 尺寸变体 */
+.btn--sm { --control-h: var(--control-h-sm); font-size: var(--fs-3); }
+.btn--lg { --control-h: var(--control-h-lg); font-size: var(--fs-5); }
+.btn--block { display: flex; width: 100%; }
+
+/* 图标按钮：热区必须扩到 ≥44pt（移动端），视觉图标可小 */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  min-width: 44px;          /* 触控热区下限 */
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--btn-radius);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition: background-color var(--dur-normal) var(--ease-move);
+}
+.icon-btn:hover { background: var(--color-surface-layout); color: var(--color-text-1); }
+.icon-btn:active { filter: brightness(0.94); }
+.icon-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+/* ============================== Field =================================== */
+.field { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+.field__label {
+  font-size: var(--fs-3);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-1);
+}
+.field__required { color: var(--color-err); margin-inline-start: 2px; }
+
+.field__control {
+  min-height: var(--control-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--color-text-1);
+  font: inherit;
+  font-size: var(--fs-4);
+  transition: border-color var(--dur-normal) var(--ease-move),
+              box-shadow var(--dur-normal) var(--ease-move);
+}
+.field__control::placeholder { color: var(--color-text-4); }
+.field__control:hover:not(:disabled) { border-color: var(--gray-400); }
+.field__control:disabled {
+  background: var(--color-surface-layout);
+  color: var(--color-text-4);
+  cursor: not-allowed;
+}
+/* 只读 ≠ 禁用：只读仍可聚焦与复制，禁用不可 */
+.field__control[readonly] {
+  background: var(--color-surface-layout);
+  color: var(--color-text-2);
+  cursor: text;
+}
+
+.field__help { font-size: var(--fs-2); color: var(--color-text-3); }
+.field__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  font-size: var(--fs-2);
+  color: var(--color-err);
+}
+.field[data-invalid="true"] .field__control {
+  border-color: var(--color-err);
+}
+/* 错误态焦点环改用危险色，保持 ≥3:1 */
+.field[data-invalid="true"] .field__control:focus-visible {
+  box-shadow:
+    0 0 0 var(--ring-offset) var(--color-bg),
+    0 0 0 calc(var(--ring-offset) + var(--ring-w)) var(--color-err);
+}
+
+/* ============================== Card ==================================== */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+}
+/* 只有可点击的卡片才有 hover 抬升 —— 静态信息卡不响应 */
+.card--interactive {
+  cursor: pointer;
+  transition: border-color var(--dur-normal) var(--ease-move);
+}
+.card--interactive:hover { border-color: var(--color-border-strong); }
+.card--interactive:active { background: var(--color-surface-layout); }
+/* 主卡：唯一的视觉重心，靠边框加粗 + 跨列实现，不靠阴影堆叠 */
+.card--primary {
+  border-color: var(--color-primary);
+  border-width: 1px;
+  box-shadow: var(--sh-card);
+}
+
+/* ============================== Panel =================================== */
+/* 面板 = 带标题栏的容器。用于监控/大屏的分区 */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;                 /* 允许在 flex/grid 中收缩 */
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-surface);
+}
+.panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-gap);
+  padding: var(--sp-2) var(--space-component);
+  border-bottom: 1px solid var(--color-border);
+}
+.panel__title {
+  margin: 0;
+  font-size: var(--fs-3);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-1);
+}
+.panel__meta { font-size: var(--fs-1); color: var(--color-text-3); }
+.panel__body { padding: var(--space-component); min-height: 0; }
+
+/* ============================== Badge / Tag ============================= */
+/* 关键纪律：状态「必须」带形状或图标 —— 不得只靠颜色（色盲安全） */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-control);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-medium);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.badge::before {           /* 形状编码：色盲可辨 */
+  content: "";
+  width: 6px; height: 6px;
+  flex: 0 0 auto;
+  background: currentColor;
+}
+.badge--ok   { color: var(--color-ok);   background: var(--color-ok-bg); }
+.badge--ok::before   { border-radius: var(--r-pill); }               /* ● 正常 */
+.badge--warn { color: var(--color-warn); background: var(--color-warn-bg); }
+.badge--warn::before { clip-path: polygon(50% 0,100% 100%,0 100%); } /* ▲ 警告 */
+.badge--err  { color: var(--color-err);  background: var(--color-err-bg); }
+.badge--err::before  { clip-path: polygon(50% 0,100% 50%,50% 100%,0 50%); } /* ◆ 严重 */
+.badge--info { color: var(--color-info); background: var(--color-info-bg); }
+.badge--info::before { border-radius: 1px; }                         /* ■ 信息 */
+.badge--unknown { color: var(--color-text-3); background: var(--color-surface-layout); }
+.badge--unknown::before { clip-path: polygon(50% 0,100% 100%,0 100%); opacity: .6; }
+
+/* Tag：分类标签。绝不用于关键状态 —— 关键状态用 Alert 或 Badge */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-control);
+  background: var(--color-surface-layout);
+  color: var(--color-text-2);
+  font-size: var(--fs-1);
+  line-height: 1.8;
+  white-space: nowrap;
+}
+
+/* ============================== Alert =================================== */
+.alert {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--space-component);
+  border-radius: var(--r-surface);
+  border-inline-start: 3px solid currentColor;   /* 左侧色条 + 图标双编码 */
+  font-size: var(--fs-4);
+}
+.alert__icon { flex: 0 0 auto; margin-top: 1px; }
+.alert__body { min-width: 0; }
+.alert__title { font-weight: var(--fw-semibold); color: var(--color-text-1); }
+.alert__desc { color: var(--color-text-2); font-size: var(--fs-3); }
+.alert--ok   { background: var(--color-ok-bg);   color: var(--color-ok); }
+.alert--warn { background: var(--color-warn-bg); color: var(--color-warn); }
+.alert--err  { background: var(--color-err-bg);  color: var(--color-err); }
+.alert--info { background: var(--color-info-bg); color: var(--color-info); }
+
+/* ============================== Toast =================================== */
+.toast-region {
+  position: fixed;
+  inset-inline-end: var(--sp-6);
+  inset-block-end: calc(var(--sp-6) + var(--safe-bottom));
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-width: min(420px, calc(100vw - 2 * var(--sp-4)));
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--space-component);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-surface);
+  box-shadow: var(--sh-popup);
+  font-size: var(--fs-4);
+  animation: ui-toast-in var(--dur-slow) var(--ease-enter);
+}
+.toast__action {
+  margin-inline-start: auto;
+  background: none; border: 0; padding: 0 var(--sp-1);
+  color: var(--color-primary);
+  font: inherit; font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+.toast__action:hover { text-decoration: underline; }
+.toast__close { color: var(--color-text-3); }
+
+/* ============================== Skeleton ================================ */
+/* >1s 的等待一律用骨架屏，不用长期阻塞的 spinner */
+.skeleton {
+  background: var(--color-surface-layout);
+  border-radius: var(--r-control);
+  animation: ui-pulse 1.4s var(--ease-move) infinite;
+}
+.skeleton--text { height: 1em; }
+.skeleton--row  { height: var(--row-h, 40px); }
+
+/* ============================== Empty =================================== */
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--space-block) var(--space-component);
+  color: var(--color-text-3);
+  font-size: var(--fs-4);
+}
+.empty__title { color: var(--color-text-2); font-weight: var(--fw-medium); }
+.empty__hint  { font-size: var(--fs-3); }
+
+/* ============================== Table =================================== */
+.table-wrap { overflow: auto; }
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-3);
+}
+.table th {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  padding: var(--sp-2) var(--space-component);
+  background: var(--color-surface-layout);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-2);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-semibold);
+  text-align: start;
+  white-space: nowrap;
+}
+.table td {
+  height: var(--row-h, 40px);
+  padding: 0 var(--space-component);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-1);
+  vertical-align: middle;
+}
+/* 默认不用斑马纹；靠 hover 行高亮强调当前行 */
+.table tbody tr:hover { background: var(--color-surface-layout); }
+.table [aria-sort] button {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: 0; padding: 0;
+  color: inherit; font: inherit; cursor: pointer;
+}
+.table__num { font-variant-numeric: tabular-nums; text-align: end; }
+.table__actions { text-align: end; white-space: nowrap; }
+/* 空单元格统一显示 - 而非留白 */
+
+/* ============================== KPI ===================================== */
+/* 差异化抓手：只让关键数字用超大等宽字号，与周围形成 ≥4× 反差 */
+.kpi__value {
+  font-size: var(--fs-9);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--color-text-1);
+}
+.kpi__value--sm { font-size: var(--fs-8); }
+.kpi__value--lg { font-size: calc(var(--fs-9) * 1.6); }
+.kpi__label {
+  font-size: var(--fs-1);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-3);
+}
+.kpi__unit { font-size: 0.36em; font-weight: var(--fw-medium); color: var(--color-text-2); margin-inline-start: 4px; }
+
+/* ============================== Switch ================================== */
+.switch {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  min-height: 44px;                 /* 触控热区 */
+  cursor: pointer;
+  background: none; border: 0; padding: 0;
+  color: var(--color-text-2); font: inherit; font-size: var(--fs-3);
+}
+.switch__track {
+  width: 36px; height: 20px;
+  border-radius: var(--r-pill);
+  background: var(--color-border-strong);
+  transition: background-color var(--dur-normal) var(--ease-move);
+}
+.switch__thumb {
+  display: block; width: 16px; height: 16px; margin: 2px;
+  border-radius: var(--r-pill);
+  background: #FFFFFF;
+  transition: transform var(--dur-normal) var(--ease-move);
+}
+.switch[aria-checked="true"] .switch__track { background: var(--color-primary); }
+.switch[aria-checked="true"] .switch__thumb { transform: translateX(16px); }
+.switch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ============================== Modal ================================== */
+.scrim {
+  position: fixed; inset: 0;
+  z-index: var(--z-overlay);
+  background: rgb(2 6 23 / 0.45);
+}
+.modal {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-start: 50%;
+  z-index: var(--z-modal);
+  margin-inline: auto;
+  width: min(560px, calc(100vw - 2 * var(--sp-4)));
+  transform: translateY(-50%);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-surface);
+  box-shadow: var(--sh-popup);
+  animation: ui-modal-in var(--dur-slow) var(--ease-enter);
+}
+.modal__body { padding: var(--sp-6) var(--space-gap) var(--space-component); }
+.modal__foot {
+  display: flex; justify-content: flex-end; gap: var(--sp-2);
+  padding: var(--space-component) var(--space-gap);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ============================== Util =================================== */
+.divider { height: 1px; background: var(--color-border); border: 0; margin: 0; }
+.row-2 { display: flex; align-items: center; gap: var(--sp-2); }
+.grow { flex: 1 1 auto; min-width: 0; }
+.muted { color: var(--color-text-2); }
+.dim { color: var(--color-text-3); }
+
+/* ============================== Keyframes =============================== */
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+@keyframes ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes ui-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ui-modal-in {
+  from { opacity: 0; transform: translateY(-50%) scale(0.98); }
+  to   { opacity: 1; transform: translateY(-50%) scale(1); }
+}
+/* 告警脉冲：仅在有语义时使用，且 reduced-motion 下自动降级为静态 */
+@keyframes ui-alert-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+[data-pulse] { animation: ui-alert-pulse 1.6s var(--ease-move) infinite; }

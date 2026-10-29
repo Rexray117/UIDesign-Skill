@@ -1,0 +1,183 @@
+{
+  "$description": "UIdesign-v0.1 三层 Token 起步模板（W3C DTCG 对齐）。复制后按项目改值：先改 primitive，再映射 semantic，最后按需加 component。",
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "version": "0.1.0",
+  "meta": {
+    "scenario": "admin",
+    "dials": { "variance": 3, "motion": 2, "density": 7 },
+    "style": "swiss-minimalism",
+    "aesthetic-stance": "≤20 中文字的设计主张，例如：仪表盘式的冷静，不像展厅"
+  },
+
+  "color": {
+    "$description": "PRIMITIVE 层：原始值。色相 ≤3 + 中性灰阶。",
+    "gray": {
+      "50":  { "$value": "#F9FAFB", "$type": "color" },
+      "100": { "$value": "#F3F4F6", "$type": "color" },
+      "200": { "$value": "#E5E7EB", "$type": "color" },
+      "300": { "$value": "#D1D5DB", "$type": "color" },
+      "400": { "$value": "#9CA3AF", "$type": "color" },
+      "500": { "$value": "#6B7280", "$type": "color" },
+      "600": { "$value": "#4B5563", "$type": "color" },
+      "700": { "$value": "#374151", "$type": "color" },
+      "800": { "$value": "#1F2937", "$type": "color" },
+      "900": { "$value": "#111827", "$type": "color" },
+      "950": { "$value": "#030712", "$type": "color" }
+    },
+    "brand": {
+      "400": { "$value": "#60A5FA", "$type": "color" },
+      "500": { "$value": "#3B82F6", "$type": "color" },
+      "600": { "$value": "#2563EB", "$type": "color" },
+      "700": { "$value": "#1D4ED8", "$type": "color" },
+      "800": { "$value": "#1E40AF", "$type": "color" }
+    },
+    "accent": {
+      "500": { "$value": "#EA580C", "$type": "color" },
+      "600": { "$value": "#C2410C", "$type": "color" }
+    },
+    "status": {
+      "success": { "$value": "#16A34A", "$type": "color" },
+      "warning": { "$value": "#D97706", "$type": "color" },
+      "error":   { "$value": "#DC2626", "$type": "color" },
+      "info":    { "$value": "#2563EB", "$type": "color" }
+    }
+  },
+
+  "space": {
+    "$description": "PRIMITIVE 层。4px 基数。禁止尺度外的魔法数字。",
+    "1":  { "$value": "4px",  "$type": "dimension" },
+    "2":  { "$value": "8px",  "$type": "dimension" },
+    "3":  { "$value": "12px", "$type": "dimension" },
+    "4":  { "$value": "16px", "$type": "dimension" },
+    "6":  { "$value": "24px", "$type": "dimension" },
+    "8":  { "$value": "32px", "$type": "dimension" },
+    "12": { "$value": "48px", "$type": "dimension" },
+    "16": { "$value": "64px", "$type": "dimension" }
+  },
+
+  "fontSize": {
+    "$description": "≥5 档，最大/最小 ≥3.5×。管理界面基准 14px，用户界面/移动端 16px。",
+    "xs":   { "$value": "12px", "$type": "dimension" },
+    "sm":   { "$value": "14px", "$type": "dimension" },
+    "base": { "$value": "16px", "$type": "dimension" },
+    "lg":   { "$value": "18px", "$type": "dimension" },
+    "xl":   { "$value": "20px", "$type": "dimension" },
+    "2xl":  { "$value": "24px", "$type": "dimension" },
+    "3xl":  { "$value": "32px", "$type": "dimension" },
+    "4xl":  { "$value": "48px", "$type": "dimension" },
+    "5xl":  { "$value": "64px", "$type": "dimension" }
+  },
+
+  "fontWeight": {
+    "$description": "≤3 档。界面 chrome 禁用 100-300 与 700+。",
+    "regular": { "$value": "400", "$type": "fontWeight" },
+    "medium":  { "$value": "500", "$type": "fontWeight" },
+    "semibold":{ "$value": "600", "$type": "fontWeight" }
+  },
+
+  "radius": {
+    "$description": "≤3 档。控件档 ≤ 表面档。",
+    "control": { "$value": "6px",    "$type": "dimension" },
+    "surface": { "$value": "8px",    "$type": "dimension" },
+    "pill":    { "$value": "9999px", "$type": "dimension" }
+  },
+
+  "shadow": {
+    "$description": "≤3 档，每档对应一类语义。",
+    "raised": { "$value": "0 1px 2px rgb(0 0 0 / 0.05)", "$type": "shadow" },
+    "card":   { "$value": "0 2px 8px rgb(0 0 0 / 0.08)", "$type": "shadow" },
+    "popup":  { "$value": "0 6px 16px rgb(0 0 0 / 0.12)", "$type": "shadow" }
+  },
+
+  "duration": {
+    "fast":   { "$value": "100ms", "$type": "duration" },
+    "normal": { "$value": "150ms", "$type": "duration" },
+    "slow":   { "$value": "300ms", "$type": "duration" }
+  },
+
+  "semantic": {
+    "$description": "SEMANTIC 层：用途别名。切主题只改这一层。",
+    "background":        { "$value": "{color.gray.50}",  "$type": "color" },
+    "foreground":        { "$value": "{color.gray.900}", "$type": "color" },
+    "surface":           { "$value": "#FFFFFF",          "$type": "color" },
+    "surfaceLayout":     { "$value": "{color.gray.100}", "$type": "color" },
+    "surfaceRaised":     { "$value": "#FFFFFF",          "$type": "color" },
+
+    "primary":           { "$value": "{color.brand.600}", "$type": "color" },
+    "primaryHover":      { "$value": "{color.brand.700}", "$type": "color" },
+    "primaryForeground": { "$value": "#FFFFFF",           "$type": "color" },
+
+    "accent":            { "$value": "{color.accent.500}", "$type": "color" },
+
+    "textPrimary":       { "$value": "{color.gray.900}", "$type": "color" },
+    "textSecondary":     { "$value": "{color.gray.600}", "$type": "color" },
+    "textTertiary":      { "$value": "{color.gray.500}", "$type": "color" },
+    "textDisabled":      { "$value": "{color.gray.400}", "$type": "color" },
+
+    "border":            { "$value": "{color.gray.200}", "$type": "color" },
+    "ring":              { "$value": "{color.brand.500}", "$type": "color" },
+
+    "spacingComponent":  { "$value": "{space.4}", "$type": "dimension" },
+    "spacingSection":    { "$value": "{space.8}", "$type": "dimension" },
+    "spacingPage":       { "$value": "{space.12}", "$type": "dimension" }
+  },
+
+  "darkOverrides": {
+    "$description": "暗色不是反转：去饱和、重设边框、独立测对比。",
+    "background":    { "$value": "{color.gray.950}", "$type": "color" },
+    "foreground":    { "$value": "{color.gray.50}",  "$type": "color" },
+    "surface":       { "$value": "{color.gray.900}", "$type": "color" },
+    "surfaceLayout": { "$value": "{color.gray.950}", "$type": "color" },
+    "textPrimary":   { "$value": "{color.gray.50}",  "$type": "color" },
+    "textSecondary": { "$value": "{color.gray.400}", "$type": "color" },
+    "border":        { "$value": "{color.gray.800}", "$type": "color" },
+    "shadowNote":    { "$value": "暗色下阴影失效 —— 改用表面明度差 + 边框表达层级", "$type": "other" }
+  },
+
+  "component": {
+    "$description": "COMPONENT 层：组件只消费这一层，变体只覆写这些变量。",
+    "button": {
+      "bg":        { "$value": "{semantic.primary}", "$type": "color" },
+      "fg":        { "$value": "{semantic.primaryForeground}", "$type": "color" },
+      "bgHover":   { "$value": "{semantic.primaryHover}", "$type": "color" },
+      "height":    { "$value": "32px", "$type": "dimension" },
+      "paddingX":  { "$value": "{space.4}", "$type": "dimension" },
+      "radius":    { "$value": "{radius.control}", "$type": "dimension" }
+    },
+    "input": {
+      "bg":        { "$value": "{semantic.surface}", "$type": "color" },
+      "border":    { "$value": "{semantic.border}", "$type": "color" },
+      "focusRing": { "$value": "{semantic.ring}", "$type": "color" },
+      "height":    { "$value": "32px", "$type": "dimension" }
+    },
+    "card": {
+      "bg":        { "$value": "{semantic.surface}", "$type": "color" },
+      "border":    { "$value": "{semantic.border}", "$type": "color" },
+      "padding":   { "$value": "{space.6}", "$type": "dimension" },
+      "radius":    { "$value": "{radius.surface}", "$type": "dimension" },
+      "shadow":    { "$value": "{shadow.card}", "$type": "shadow" }
+    },
+    "focusRing": {
+      "width":     { "$value": "2px", "$type": "dimension" },
+      "offset":    { "$value": "2px", "$type": "dimension" }
+    }
+  },
+
+  "constraints": {
+    "$description": "硬约束 —— 脚本与自查会核对。",
+    "maxHues": 3,
+    "maxAccentColors": 1,
+    "maxShadowTiers": 3,
+    "maxRadiusTiers": 3,
+    "maxFontWeights": 3,
+    "minFontSizeSteps": 5,
+    "minSizeRatio": 3.5,
+    "minContrastBody": "4.5:1",
+    "minContrastLarge": "3:1",
+    "minTouchTarget": "44pt",
+    "motionElementsPerView": 2,
+    "exitToEnterRatio": "0.6-0.7",
+    "staggerMs": "30-50",
+    "minSpacingHierarchyRatio": 3
+  }
+}

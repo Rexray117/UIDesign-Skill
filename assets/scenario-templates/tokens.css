@@ -1,0 +1,378 @@
+/* ============================================================================
+ * UIdesign-v0.1 · 三层 Token 底座
+ * ----------------------------------------------------------------------------
+ * 演示规则：
+ *   · tokens.md          三层架构（Primitive → Semantic → Component）
+ *   · typography-color.md 色彩预算：色相 ≤3（中性 + 1 品牌 + 状态色）
+ *                         字号 ≥5 档且最大/最小 ≥3.5×；字重 3 档
+ *   · layout-grid.md     4px 基数间距；三层表面模型
+ *   · components-states.md 圆角 ≤3 档、阴影 ≤3 档；焦点环规格
+ *   · motion.md          三档时长 + 减速/加速缓动
+ *   · anti-ai/D2         无紫粉色对；渐变仅用于材质/深度/进度
+ *
+ * 用法：
+ *   1. 在项目根引入本文件（或用 Tailwind v4 的 @theme 映射，见文末）
+ *   2. 给 <html> 或容器加 data-scenario 与 data-density 切换场景调性
+ *   3. 组件只消费 semantic / component 层，禁止裸 hex
+ * ==========================================================================*/
+
+/* ============================ LAYER 1 · PRIMITIVE ========================= */
+/* 原始值。极少改。色相刻意收敛到 2 个（中性 + 品牌橙红），其余靠明度差。 */
+:root {
+  /* 中性灰阶 —— 8 档，满足「中性色 ≥4 档」且留有余量 */
+  --gray-50:  #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
+  --gray-950: #080D18;
+
+  /* 品牌 —— 单一色相（青蓝 200°），5 档明度 */
+  --brand-300: #7DD3E8;
+  --brand-400: #38BDF8;
+  --brand-500: #0EA5E9;
+  --brand-600: #0284C7;
+  --brand-700: #0369A1;
+
+  /* 强调 —— 单一色相（琥珀 32°），只给「本屏唯一要看的动作/数字」 */
+  --accent-400: #FB923C;
+  --accent-500: #EA580C;
+  --accent-600: #C2410C;
+
+  /* 功能色 —— 只用于状态，不计入色彩预算，且必须配图标/形状 */
+  --status-ok-600:   #15803D;
+  --status-warn-600: #B45309;
+  --status-err-600:  #B91C1C;
+  --status-info-600: #0369A1;
+
+  /* 间距 —— 4px 基数，八档。尺度外一律不许用 */
+  --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
+  --sp-6: 24px;  --sp-8: 32px;  --sp-12: 48px; --sp-16: 64px;
+
+  /* 字号 —— 9 档，最大/最小 = 72/11 ≈ 6.5×（远高于 3.5× 下限） */
+  --fs-1: 11px;  --fs-2: 12px;  --fs-3: 13px;  --fs-4: 14px;
+  --fs-5: 16px;  --fs-6: 20px;  --fs-7: 28px;  --fs-8: 40px;  --fs-9: 72px;
+
+  /* 字重 —— 恰好 3 档。界面 chrome 禁用 100–300 与 700+ */
+  --fw-regular: 400;  --fw-medium: 500;  --fw-semibold: 600;
+
+  /* 圆角 —— 恰好 3 档。控件档 ≤ 表面档 */
+  --r-control: 6px;
+  --r-surface: 8px;
+  --r-pill: 9999px;
+
+  /* 阴影 —— 恰好 3 档，每档一个语义 */
+  --sh-raised: 0 1px 2px rgb(15 23 42 / 0.06);
+  --sh-card:   0 2px 8px rgb(15 23 42 / 0.08);
+  --sh-popup:  0 8px 24px rgb(15 23 42 / 0.14);
+
+  /* 时长 —— 3 档 + 缓动。进入减速、离开加速 */
+  --dur-fast: 100ms;  --dur-normal: 150ms;  --dur-slow: 300ms;
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);   /* 减速：到达 */
+  --ease-exit:  cubic-bezier(0.4, 0, 1, 1);      /* 加速：离开 */
+  --ease-move:  cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* 层级 —— 明确尺度，禁止 9999 */
+  --z-base: 0;  --z-sticky: 20;  --z-dropdown: 40;  --z-overlay: 60;  --z-modal: 80;  --z-toast: 100;
+
+  /* ── 数据系列色（属于 token 层，不属于组件层）──────────────────────────
+     为什么放在这里：图表配色是「设计决策」，必须集中管理并可被统一校验，
+     不应该散落在组件代码里。色相选自品牌青蓝与强调琥珀的同族，避免引入
+     第 4、第 5 个色相。
+     色盲安全由「颜色 + 线型 + 直接标注」三重编码保证，不依赖颜色本身。 */
+  --series-1: #38BDF8;   /* 主系列 —— 与品牌同族 */
+  --series-2: #FB923C;   /* 对比系列 —— 与强调色同族 */
+  --series-3: #A78BFA;   /* 备选第三系列 */
+  --series-dash-2: 10 6; /* 线型编码：虚线，供色盲用户区分 */
+  --series-fill-dim: rgb(255 255 255 / 0.10);
+
+  /* ── 大屏专用（比常规暗色更深，减少屏幕溢光；白字在黑底上产生光晕）───── */
+  --screen-bg: #04070E;
+  --screen-fg: #E8EDF5;
+  /* 大屏面板：暗底上用半透明叠加表达层级，不用阴影（远距看不见） */
+  --screen-panel-bg: rgb(255 255 255 / 0.03);
+  --screen-panel-border: rgb(255 255 255 / 0.10);
+  --screen-rule: rgb(255 255 255 / 0.12);   /* 分隔线 */
+  --screen-rule-strong: rgb(255 255 255 / 0.14);
+
+  /* ── 品牌渐变色对（非紫粉）—— 仅允许用于背景层，文字必须压纯色区 ─────── */
+  --gradient-hero: linear-gradient(165deg, #F0F9FF 0%, #F8FAFC 46%, #F8FAFC 100%);
+
+  /* ── 额外圆角：底部面板（Sheet）。胶囊与控件档之外的唯一例外 ─────────── */
+  --r-sheet: 16px;
+  /* ── 微元素圆角：进度条 / 小色块。不是控件也不是表面 ─────────────────── */
+  --r-micro: 2px;
+}
+
+/* ============================ LAYER 2 · SEMANTIC ========================== */
+:root {
+  /* 三层表面模型：页面底 → 容器 → 抬升（靠阴影区分，非靠颜色） */
+  --color-bg:            var(--gray-100);
+  --color-surface:       #FFFFFF;
+  --color-surface-layout: var(--gray-100);
+  --color-surface-raised: #FFFFFF;
+
+  /* 文字 4 档，全部满足 ≥4.5:1（第三档用于非正文职责） */
+  --color-text-1: var(--gray-900);   /* 主：标题、正文 */
+  --color-text-2: var(--gray-600);   /* 次：辅助说明 */
+  --color-text-3: var(--gray-500);   /* 三级：标签、元信息 */
+  --color-text-4: var(--gray-400);   /* 禁用 / 占位 */
+
+  --color-primary:    var(--brand-600);
+  --color-primary-hover: var(--brand-700);
+  --color-primary-fg: #FFFFFF;
+  --color-accent:     var(--accent-500);
+
+  --color-ok:   var(--status-ok-600);
+  --color-warn: var(--status-warn-600);
+  --color-err:  var(--status-err-600);
+  --color-info: var(--status-info-600);
+
+  --color-border: var(--gray-200);
+  --color-border-strong: var(--gray-300);
+  --color-ring: var(--brand-500);
+
+  /* 危险/成功色上的前景 —— 不写 #FFFFFF，因为「角色」比 hex 重要 */
+  --color-err-fg: #FFFFFF;
+  --color-ok-fg: #FFFFFF;
+
+  /* 图表系列语义别名 */
+  --chart-1: var(--series-1);
+  --chart-2: var(--series-2);
+  --chart-3: var(--series-3);
+  --chart-grid: rgb(255 255 255 / 0.07);   /* 网格线低对比，不与数据竞争 */
+  --chart-track: var(--series-fill-dim);   /* 进度条底槽 */
+
+  /* 状态底色（浅/中两档），用于 Alert / Tag，不用于大面积 */
+  --color-ok-bg:   #F0FDF4;
+  --color-warn-bg: #FFFBEB;
+  --color-err-bg:  #FEF2F2;
+  --color-info-bg: #F0F9FF;
+
+  /* 间距语义 —— 密度变体覆写这三个，组件只消费它们 */
+  --space-component: var(--sp-3);   /* 组件内 */
+  --space-gap:       var(--sp-4);   /* 组件间 */
+  --space-block:     var(--sp-8);   /* 区块间（≥ 组件间 ×2） */
+  --space-page:      var(--sp-12);  /* 章节间 */
+
+  /* 控件高度 */
+  --control-h: 36px;
+  --control-h-sm: 28px;
+  --control-h-lg: 44px;
+}
+
+/* ====================== 密度变体（三旋钮之 --density） ===================== */
+/* 交换的是整张间距/字号尺度，不是零散数值 —— 这正是 token 化的价值 */
+
+/* 8–10：监控界面 · 数据大屏 —— 一屏看完是硬需求 */
+[data-density="compact"] {
+  --space-component: var(--sp-2);
+  --space-gap:       var(--sp-3);
+  --space-block:     var(--sp-4);
+  --space-page:      var(--sp-6);
+  --control-h: 28px;
+  --control-h-sm: 24px;
+  --fs-body: 13px;
+  --fs-label: 11px;
+  --row-h: 32px;
+}
+
+/* 6–7：管理界面 —— 密集但留可读余量（桌面高密度场景，基准可 <16px） */
+[data-density="dense"] {
+  --space-component: var(--sp-3);
+  --space-gap:       var(--sp-4);
+  --space-block:     var(--sp-6);
+  --space-page:      var(--sp-8);
+  --control-h: 32px;
+  --control-h-sm: 28px;
+  --fs-body: 14px;
+  --fs-label: 12px;
+  --row-h: 40px;
+}
+
+/* 4–5：用户界面 · C 端移动端 —— 标准 */
+[data-density="standard"] {
+  --fs-body: 16px;
+  --fs-label: 13px;
+  --row-h: 48px;
+}
+
+/* 1–3：营销落地页 —— 宽松，留白是被分配的资源 */
+[data-density="comfortable"] {
+  --space-component: var(--sp-4);
+  --space-gap:       var(--sp-6);
+  --space-block:     var(--sp-12);
+  --space-page:      var(--sp-16);
+  --control-h: 48px;
+  --control-h-sm: 36px;
+  --fs-body: 16px;
+  --fs-label: 13px;
+  --row-h: 56px;
+}
+
+/* ============================ 暗色模式 =================================== */
+/* 纪律：不是反转颜色 —— 去饱和、重设边框、独立测对比、阴影退场 */
+.dark,
+[data-theme="dark"] {
+  --color-bg:            var(--gray-950);
+  --color-surface:       #111827;
+  --color-surface-layout: var(--gray-950);
+  --color-surface-raised: #1A2233;
+
+  --color-text-1: #E8EDF5;   /* 不用纯白，避免光晕 */
+  --color-text-2: #A8B4C4;
+  --color-text-3: #8492A6;
+  --color-text-4: #5A6675;
+
+  --color-primary:    var(--brand-400);   /* 提亮，暗底需要更亮的品牌色 */
+  --color-primary-hover: var(--brand-300);
+  --color-primary-fg: #08111C;            /* 深字压亮色，不是白字 */
+
+  --color-border: #26313F;                /* 边框必须重设 */
+  --color-border-strong: #35435A;
+
+  --color-ok-bg:   #0C2016;
+  --color-warn-bg: #241A08;
+  --color-err-bg:  #240F0F;
+  --color-info-bg: #0A1C2B;
+
+  /* 暗色下阴影几乎不可见：层级改由表面明度差 + 边框承担 */
+  --sh-raised: 0 1px 2px rgb(0 0 0 / 0.4);
+  --sh-card:   0 2px 8px rgb(0 0 0 / 0.5);
+  --sh-popup:  0 8px 24px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+/* ============================ LAYER 3 · COMPONENT ======================== */
+:root {
+  --btn-bg: var(--color-primary);
+  --btn-fg: var(--color-primary-fg);
+  --btn-bg-hover: var(--color-primary-hover);
+  --btn-radius: var(--r-control);
+  --btn-px: var(--space-gap);
+
+  --input-bg: var(--color-surface);
+  --input-border: var(--color-border-strong);
+  --input-radius: var(--r-control);
+
+  --card-bg: var(--color-surface);
+  --card-border: var(--color-border);
+  --card-radius: var(--r-surface);   /* 表面档 ≥ 控件档 */
+  --card-pad: var(--space-gap);
+
+  --ring-w: 2px;
+  --ring-offset: 2px;
+}
+
+/* ============================ 基础样式 =================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }   /* 不禁用缩放 */
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text-1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-size: var(--fs-body, 16px);
+  font-weight: var(--fw-regular);
+  line-height: 1.6;
+}
+
+/* 焦点环 —— 2px + 2px 偏移。绝不为「干净」而移除 */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--ring-offset) var(--color-bg),
+    0 0 0 calc(var(--ring-offset) + var(--ring-w)) var(--color-ring);
+  border-radius: var(--r-control);
+}
+
+/* 数字排版 —— 数据列/价格/计时必须等宽，防跳动 */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* 数据显示类一律右对齐 */
+.num-right { text-align: right; }
+
+/* 长文本截断（必须配 title 或 Tooltip 给全文） */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 屏幕阅读器专用 */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* 粘性元素不得遮挡键盘焦点 */
+[data-sticky] { scroll-margin-top: 96px; }
+
+/* ============================ 无障碍偏好 ================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* 告警脉冲降级为静态高对比 */
+  [data-pulse] { animation: none !important; opacity: 1 !important; }
+}
+
+/* ============================ 移动端安全区 =============================== */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* =========================================================================
+ * 可选：Tailwind v4 @theme 映射
+ * 若使用 Tailwind，用下面这段把 token 暴露成工具类，即可写 bg-surface / text-1
+ * -------------------------------------------------------------------------
+ * @import "tailwindcss";
+ * @theme {
+ *   --color-bg: var(--color-bg);
+ *   --color-surface: var(--color-surface);
+ *   --color-surface-layout: var(--color-surface-layout);
+ *   --color-border: var(--color-border);
+ *   --color-primary: var(--color-primary);
+ *   --color-accent: var(--color-accent);
+ *   --color-ok: var(--color-ok);
+ *   --color-warn: var(--color-warn);
+ *   --color-err: var(--color-err);
+ *   --color-text-1: var(--color-text-1);
+ *   --color-text-2: var(--color-text-2);
+ *   --color-text-3: var(--color-text-3);
+ *   --color-text-4: var(--color-text-4);
+ *   --radius-control: var(--r-control);
+ *   --radius-surface: var(--r-surface);
+ *   --radius-pill: var(--r-pill);
+ *   --shadow-raised: var(--sh-raised);
+ *   --shadow-card: var(--sh-card);
+ *   --shadow-popup: var(--sh-popup);
+ *   --font-size-1: var(--fs-1);
+ *   --font-size-2: var(--fs-2);
+ *   --font-size-3: var(--fs-3);
+ *   --font-size-4: var(--fs-4);
+ *   --font-size-5: var(--fs-5);
+ *   --font-size-6: var(--fs-6);
+ *   --font-size-7: var(--fs-7);
+ *   --font-size-8: var(--fs-8);
+ *   --font-size-9: var(--fs-9);
+ * }
+ * ======================================================================= */
