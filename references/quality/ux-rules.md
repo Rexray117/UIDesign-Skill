@@ -105,7 +105,7 @@
 
 | 规则 | 要求 |
 |------|------|
-| style-match | 风格匹配产品类型（查 `styles/index.md` 适配矩阵） |
+| style-match | 风格匹配产品类型（查 `references/styles/index.md` 适配矩阵） |
 | consistency | 全站使用同一风格 |
 | no-emoji-icons | 用 SVG 图标（Lucide / Heroicons / Phosphor），**不用 emoji** |
 | color-palette-from-product | 配色从产品/行业出发 |

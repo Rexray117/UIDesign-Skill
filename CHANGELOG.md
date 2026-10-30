@@ -4,6 +4,46 @@
 
 ---
 
+## v0.1.3 — 2026-10-30（自检脚本校准 + 断链修复）
+
+**主题：`ai_flavor_audit.py` 对最典型的 AI 配色与手写 CSS 失明，且把「分数」当「可交付」输出。**
+
+外部审计构造了一个教科书级 AI 后台页（Inter + `linear-gradient(135deg,#6366f1,#8b5cf6)` +
+三张等宽 stat card + `Welcome back, Admin 👋` + `.card:hover` 抬升 + 通用 CTA），
+旧版给 **19.8 分 / A 档「可交付」**——本技能最该拦下的页面被判合格。根因是四条正则的口径过窄，
+外加「无高危项才可交付」的规程没有落到脚本输出里。
+
+### 修复（scripts/ai_flavor_audit.py）
+
+| 项 | 旧口径 | 新口径 |
+|----|--------|--------|
+| 紫族渐变 | 只认「紫→粉」配对，靛蓝 239°→紫 258° 两边同族不算 | 同一 `linear-gradient` 内 ≥2 个紫族色标即计数（`purple_family_gradients`），命名色兜底放宽到 225–340° 同族配对 |
+| 悬停抬升 | 只认 Tailwind `hover:translate-y-` | 追加手写 CSS `:hover{…translateY(-…)}` 与 `:hover{…box-shadow:…}` |
+| 重投影 | 只认 `shadow-xl/2xl` 与 ≥40px 模糊 | 按声明长度序列取第 3 位（blur）≥16px 计重投影；`0 20px 25px -5px` 现能识别 |
+| 大圆角 | 只认 `rounded-2xl/3xl` 与 20–99px | 取每条声明最大半径 ≥20px 或 ≥18%，`999px` 胶囊、`0 0 32px 32px` 简写都能认 |
+| D6 空洞词 | 仅中文 | 补 11 条英文 UI 微文案整句（`customize your workspace` / `fit your needs` / `get started today` 等） |
+| 分档措辞 | A 档直接写「可交付」 | 分档只看分数（A「有立场（结构有取舍）」）；新增 **可交付性结论**行：0 条高危=可交付、1–2 条=待修、≥3 条=不可交付 |
+| Windows 管道 | 中文乱码 | `main()` 首行 `sys.stdout.reconfigure(encoding="utf-8")` |
+| 小样本 | 总分被误当结论 | ≤2 个文件时提示「按问题密度计必然偏低，看清单不看总分」 |
+
+校准结果（同一批样本）：
+
+- 教科书 AI 后台页：19.8 / A「可交付」→ **32.0 / B，可交付性=不可交付（5 条高危）**；
+- 本技能自带 `admin-console.tsx`：13.1 → 14.6 / A（1 条高危 → 待修）；
+- 自带 `primitives.css`：7.1 → A / 可交付（未被新正则误伤）；
+- 真实手写前端工程：能指出 8 个界面色相、30 处裸 hex、8 种阴影、14 种圆角、缺 `:focus`。
+
+### 断链修复
+
+- `SKILL.md` §三 场景路由表 6 行 `scenarios/*.md` 补 `references/` 前缀（同文件别处已写对，自相矛盾）；
+- `assets/templates/style-decision.md` 与 `references/quality/ux-rules.md` 的 `styles/*.md` 补 `references/` 前缀。
+
+### 元数据
+
+- `SKILL.md` `version` 0.1.1 → 0.1.3（v0.1.2 只改了 CHANGELOG，版本号漏同步）。
+
+---
+
 ## v0.1.2 — 2026-10-16（文档修订）
 
 **主题：补齐数据资产检索表的登记缺口——3 个未登记 CSV。**

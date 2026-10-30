@@ -1,10 +1,10 @@
 # UI Design Skill · 界面设计（去 AI 味版）
 
 [![DSH Skill](https://img.shields.io/badge/DeepSeek%20Harness-skill-4a7dff)](https://github.com/Rexray117/UIDesign-Skill)
-[![version](https://img.shields.io/badge/version-0.1.1-brightgreen)](https://github.com/Rexray117/UIDesign-Skill/releases)
+[![version](https://img.shields.io/badge/version-0.1.3-brightgreen)](https://github.com/Rexray117/UIDesign-Skill/releases)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
-> 一个 **DeepSeek Harness（DSH）/ Agent Skill**：`UIdesign-v0.1` v0.1.1。
+> 一个 **DeepSeek Harness（DSH）/ Agent Skill**：`UIdesign-v0.1` v0.1.3。
 
 |
 
@@ -53,7 +53,7 @@ plugin_manager action=install_bundle target=<本仓库绝对路径>
 
 ## 版本
 
-- 当前版本：**v0.1.1**（与 `SKILL.md` 的 `version` 字段一致）
+- 当前版本：**v0.1.3**（与 `SKILL.md` 的 `version` 字段一致）
 - 变更记录见仓库提交历史
 
 ## License

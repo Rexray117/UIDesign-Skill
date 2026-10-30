@@ -1,7 +1,7 @@
 ---
 name: UIdesign-v0.1
 display_name: UI 设计技能包（去 AI 味版）
-version: 0.1.1
+version: 0.1.3
 description: |
   面向 Web 界面设计、UI/UX 设计、原型设计与前端实现的一体化设计技能包，核心特征是主动去 AI 味。
   内置 24 种可选风格的精写处方、6 类场景的差异化设计决策（用户界面 / 企业监控界面 / 管理界面 /
@@ -60,12 +60,12 @@ python scripts/ai_flavor_audit.py <产出目录或文件> [--json] [--scenario a
 
 | 场景 | 典型形态 | 设计重心 | 处方文件 |
 |------|----------|----------|----------|
-| **用户界面**（核心） | C 端产品页、工具型 Web App、SaaS 前台 | 任务完成效率 + 品牌辨识度 | `scenarios/core-user-interface.md` |
-| **企业监控界面**（核心） | 运维大屏、实时监控、告警中心、IoT 看板 | **异常发现速度** + 信息密度 | `scenarios/core-monitoring.md` |
-| **管理界面**（核心） | 中后台、CRUD 控制台、配置中心、审批流 | 一致性与确定性 + 批量效率 | `scenarios/core-admin.md` |
-| 营销落地页（扩展） | 产品官网、活动页、定价页 | 转化 + 首屏冲击力 | `scenarios/ext-landing.md` |
-| 数据可视化大屏（扩展） | 指挥中心、汇报大屏、数字孪生 | 远距离可读 + 叙事节奏 | `scenarios/ext-dataviz.md` |
-| C 端移动端（扩展） | H5、小程序、移动 App Web 层 | 拇指可达 + 平台原生感 | `scenarios/ext-mobile.md` |
+| **用户界面**（核心） | C 端产品页、工具型 Web App、SaaS 前台 | 任务完成效率 + 品牌辨识度 | `references/scenarios/core-user-interface.md` |
+| **企业监控界面**（核心） | 运维大屏、实时监控、告警中心、IoT 看板 | **异常发现速度** + 信息密度 | `references/scenarios/core-monitoring.md` |
+| **管理界面**（核心） | 中后台、CRUD 控制台、配置中心、审批流 | 一致性与确定性 + 批量效率 | `references/scenarios/core-admin.md` |
+| 营销落地页（扩展） | 产品官网、活动页、定价页 | 转化 + 首屏冲击力 | `references/scenarios/ext-landing.md` |
+| 数据可视化大屏（扩展） | 指挥中心、汇报大屏、数字孪生 | 远距离可读 + 叙事节奏 | `references/scenarios/ext-dataviz.md` |
+| C 端移动端（扩展） | H5、小程序、移动 App Web 层 | 拇指可达 + 平台原生感 | `references/scenarios/ext-mobile.md` |
 
 **场景决定风格的可选集。** 同一个风格在不同场景里的适配度可能完全相反——先看 `references/styles/index.md` 的适配矩阵，再选风格。
 

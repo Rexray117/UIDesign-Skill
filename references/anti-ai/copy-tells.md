@@ -19,6 +19,8 @@
 
 ---
 
+> 注：`ai_flavor_audit.py` 的 D6 空洞词表同时含中文与英文 UI 微文案（`customize your workspace` / `fit your needs` / `start your journey` 等整句喊话），中英混排页面按同一口径计分；纯英文页面的中文词条自然不命中，属正常。
+
 ## 二、中文空洞词与句式表
 
 ### 2.1 高频空洞词（命中即复核）

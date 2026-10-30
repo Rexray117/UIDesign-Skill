@@ -126,6 +126,11 @@ HOLLOW_WORDS = [
     "seamlessly", "empower", "all-in-one", "cutting-edge", "best-in-class",
     "game-changer", "leverage", "robust", "streamline", "elevate",
     "unleash", "unlock", "revolutionize", "effortless",
+    # 英文 UI 微文案套路：整句喊话、零信息（对应 copy-tells.md 的「通用积极收尾」）
+    "customize your workspace", "fit your needs", "meet your needs",
+    "tailored to your needs", "everything you need", "quick overview",
+    "get started today", "let's make today", "your all-in-one",
+    "designed for you", "welcome back",
 ]
 
 GENERIC_ENDING = [
@@ -351,8 +356,35 @@ def analyze(text, per_file, scenario):
             a, b = NAMED_HUES.get(seq[i]), NAMED_HUES.get(seq[i + 1])
             if a is None or b is None:
                 continue
-            if (255 <= a <= 300) and (300 <= b <= 355):
+            if (225 <= a <= 340) and (300 <= b <= 355):
                 purple_pink += 1
+                break
+
+    # 紫族同相渐变：同一个 gradient 里出现 >=2 个紫族色标（靛蓝/紫罗兰/紫/品红），
+    # 即 AI 生成页最典型的 #6366f1 -> #8b5cf6 / from-indigo-500 to-purple-600。
+    # 只认同一个渐变内的配对，避免把「主色 + 其深色变体」误判。
+    def _purple_family(hx):
+        hsl = hex_to_hsl(hx)
+        if not hsl:
+            return False
+        hue, sat, _lig = hsl
+        return sat > 0.25 and 225 <= hue <= 340
+
+    purple_grad = 0
+    for gdecl in re.findall(r"(?:linear|radial|conic)-gradient\(([^)]{0,400})\)", text, re.I):
+        cols = {c.lower() for c in re.findall(r"#(?:[0-9a-fA-F]{6})\b", gdecl)
+                if _purple_family(c)}
+        if len(cols) >= 2:
+            purple_grad += 1
+    if not purple_grad:
+        gseq = re.findall(r"(?:from|via|to)-([a-z]+)-\d{2,3}", text, re.I)
+        gseq = [s.lower() for s in gseq]
+        for i in range(len(gseq) - 1):
+            ga, gb = NAMED_HUES.get(gseq[i]), NAMED_HUES.get(gseq[i + 1])
+            if ga is None or gb is None:
+                continue
+            if 225 <= ga <= 340 and 225 <= gb <= 340:
+                purple_grad += 1
                 break
     hardcoded_in_comp = 0
     for fp, body in per_file:
@@ -363,12 +395,15 @@ def analyze(text, per_file, scenario):
     d2 = 0.0
     # 只用「界面色相」计分：功能色（状态/图表）不计入色彩预算
     d2 += clamp((ui_hue_count - 3) / 7.0 * 100.0) * 0.30
-    # 紫→粉（或紫→品红）是 AI 配色最强的单一信号：出现 1 次即计满该子项
-    d2 += clamp(purple_pink / 1.0 * 100.0) * 0.30
+    # 紫族渐变 / 紫→粉是 AI 配色最强的单一信号：出现 1 次即计满该子项
+    d2 += clamp((purple_pink + purple_grad) / 1.0 * 100.0) * 0.30
     d2 += clamp(hardcoded_in_comp / 20.0 * 100.0) * 0.20
     d2 += clamp(gradients / 10.0 * 100.0) * 0.20
     d2 = clamp(d2)
 
+    if purple_grad and not purple_pink:
+        findings.append(("D2", "高", "紫族同相渐变 %d 处（靛蓝→紫罗兰一类）——"
+                         "AI 生成页的默认配色指纹" % purple_grad))
     if ui_hue_count > 4:
         findings.append(("D2", "高", "界面色相 %d 个（上限 4 = 1 主 + 1 强调 + 余量；"
                          "功能色与图表系列已排除）——配色缺乏取舍" % ui_hue_count))
@@ -412,13 +447,38 @@ def analyze(text, per_file, scenario):
     glow = len(re.findall(r"text-shadow\s*:", text, re.I))
     glow += len(re.findall(r"drop-shadow\s*\(", text, re.I))
     hover_lift = len(re.findall(r"hover:shadow-|hover:translate-y-|-translate-y-1|box-shadow[^;]*hover", text, re.I))
+    # 手写 CSS 的悬停抬升/抬影（Tailwind 写法之外的另一半工程现实）
+    hover_lift += len(re.findall(
+        r":hover[^{}\n]{0,80}\{[^{}]{0,600}?translate[XY]?d?\s*\(\s*[-\d.]", text, re.I))
+    hover_lift += len(re.findall(
+        r":hover[^{}\n]{0,80}\{[^{}]{0,600}?box-shadow\s*:", text, re.I))
 
     # 极值重复：单一但极端的值反复出现，比「多种温和的值」更糟。
     # 只统计去重后数量会漏掉这一类，因此单独计数。
     heavy_shadow = len(re.findall(r"\bshadow-(?:xl|2xl)\b", text, re.I))
-    heavy_shadow += len(re.findall(r"box-shadow\s*:[^;}]*\b(?:[4-9]\d)px", text, re.I))
+    for sdecl in shadows:
+        # 去掉颜色函数与 token 引用后再取「长度序列」= x y blur spread，
+        # 无单位的 0 也是长度（`0 20px 25px -5px` 的 blur 是第 3 位）
+        clean = re.sub(r"(?:rgba?|hsla?|color)\([^)]*\)", " ", sdecl)
+        clean = re.sub(r"var\([^)]*\)", " ", clean)
+        lens = []
+        for tk in re.findall(r"(?<![\w.])-?\d*\.?\d+(?:px)?", clean):
+            tk = tk.strip()
+            if tk.endswith("px"):
+                lens.append(abs(float(tk[:-2])))
+            elif float(tk) == 0:
+                lens.append(0.0)
+        if not lens:
+            continue
+        blur = lens[2] if len(lens) >= 3 else max(lens)   # x-offset y-offset blur spread
+        if blur >= 16:                                    # Tailwind shadow-lg=15px，xl=20px
+            heavy_shadow += 1
     large_radius = len(re.findall(r"\brounded-(?:2xl|3xl)\b", text, re.I))
-    large_radius += len(re.findall(r"border-radius\s*:\s*(?:[2-9]\d)px", text, re.I))
+    for rdecl in radii:
+        pxs = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)px", rdecl)]
+        pcts = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)%", rdecl)]
+        if (pxs and max(pxs) >= 20) or (pcts and max(pcts) >= 18):
+            large_radius += 1
 
     d3 = 0.0
     d3 += clamp((shadow_n - 3) / 5.0 * 100.0) * 0.22
@@ -569,6 +629,7 @@ def analyze(text, per_file, scenario):
             "unique_hues": hue_count,
             "ui_hues": ui_hue_count,
             "purple_pink": purple_pink,
+            "purple_family_gradients": purple_grad,
             "hardcoded_hex_in_components": hardcoded_in_comp,
             "gradients": gradients,
             "unique_shadows": shadow_n,
@@ -603,16 +664,26 @@ def score(res, scenario):
     return clamp(num / den)
 
 
+_BANDS = [(20, "A", "有立场（结构有取舍）"), (40, "B", "基本成型，局部惰性"),
+          (60, "C", "明显模板感"), (80, "D", "通用模板"),
+          (10 ** 9, "E", "默认主题直出")]
+
+
 def grade(total):
-    if total <= 20:
-        return "A", "有立场，可交付"
-    if total <= 40:
-        return "B", "基本成型，局部惰性"
-    if total <= 60:
-        return "C", "明显模板感"
-    if total <= 80:
-        return "D", "通用模板"
+    """分档只看分数（分数只用于定位，不用于交付）。"""
+    for limit, code, desc in _BANDS:
+        if total <= limit:
+            return code, desc
     return "E", "默认主题直出"
+
+
+def verdict(high_risk):
+    """可交付性结论：只由「未解决的高危项」决定，见 references/anti-ai/diagnosis.md。"""
+    if high_risk == 0:
+        return "可交付（仍按 false-positives.md 逐条核对误杀）"
+    if high_risk <= 2:
+        return "待修：%d 条高危未解决，修完才可交付" % high_risk
+    return "不可交付：%d 条高危未解决" % high_risk
 
 
 # ---------------------------------------------------------------- 输出
@@ -630,7 +701,14 @@ def render(result, scenario, top):
     lines.append("  扫描文件：%d   场景：%s" % (result["files_scanned"], sc["label"]))
     lines.append("")
     lines.append("  AI 味总分：%.1f / 100   分档 %s（%s）" % (result["total"], g, gd))
+    lines.append("  可交付性：%s" % result.get("verdict", verdict(
+        sum(1 for f in result["findings"] if f[1] == "高"))))
     lines.append("")
+    # 小样本提示：六维是「问题密度」加权，小页面天然够不到高档位
+    if result["files_scanned"] <= 2:
+        lines.append("  提示：样本仅 %d 个文件，分数按问题密度计必然偏低——"
+                     "请看问题清单与可交付性结论，不要只看总分。" % result["files_scanned"])
+        lines.append("")
     labels = [
         ("D1", "对称惯性", result["d1"]),
         ("D2", "色彩惰性", result["d2"]),
@@ -671,6 +749,8 @@ def render(result, scenario, top):
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description="AI 味六维自检")
     ap.add_argument("path", help="要扫描的目录或文件")
     ap.add_argument("--json", action="store_true", help="以 JSON 输出")
@@ -691,7 +771,10 @@ def main():
     res = analyze(text, per_file, args.scenario)
     total = score(res, args.scenario)
     res["total"] = round(total, 1)
+    high_risk = sum(1 for f in res["findings"] if f[1] == "高")
     g, gd = grade(total)
+    res["high_risk"] = high_risk
+    res["verdict"] = verdict(high_risk)
     res["grade"] = g
     res["grade_desc"] = gd
     res["scenario"] = args.scenario
